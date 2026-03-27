@@ -1,0 +1,23 @@
+# OpenClaw Agent Configuration
+# Agent: frontend-lead
+# Created: 2026-03-20
+
+agent:
+  name: frontend-lead
+  role: 前端架构专家
+  
+model:
+  provider: kimi
+  model: kimi-coding/k2p5
+  api_key: ${KIMI_API_KEY}
+  
+permissions:
+  - exec
+  - write
+  - edit
+  - browser
+  - web_search
+  
+workdir: /Users/ryan/.openclaw/workspace-frontend-lead
+report_to: main
+status: active

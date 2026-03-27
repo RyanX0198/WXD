@@ -1,0 +1,109 @@
+/* 参照DESIGN_SYSTEM.md 全局样式规范 */
+
+/* 基础变量 */
+:root {
+  --color-primary: #5765c7;
+  --color-primary-hover: #4654b6;
+  --color-gradient-start: #5765c7;
+  --color-gradient-mid: #a0fcc9;
+  --color-gradient-end: #ffa6ac;
+  
+  --bg-primary: #000000;
+  --bg-card: #111111;
+  --bg-input: #1a1a1a;
+  --bg-hover: #222222;
+  
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-disabled: #6b7280;
+  
+  --border-default: #333333;
+  --border-hover: #444444;
+  --border-focus: #5765c7;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 选中文字样式 */
+::selection {
+  background: rgba(87, 101, 199, 0.3);
+  color: #fff;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* 阅读模式正文样式 */
+.prose {
+  max-width: 65ch;
+}
+
+.prose-invert {
+  color: #e5e5e5;
+}
+
+.prose-invert p {
+  margin-bottom: 1.5em;
+  text-align: justify;
+  text-indent: 2em;
+}
+
+/* 输入框聚焦时的光晕效果 */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 2px rgba(87, 101, 199, 0.2);
+}
+
+/* 按钮点击效果 */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #5765c7, #a0fcc9, #ffa6ac);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  border-color: rgba(87, 101, 199, 0.5);
+  transform: translateY(-2px);
+}
