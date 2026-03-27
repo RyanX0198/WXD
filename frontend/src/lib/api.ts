@@ -170,7 +170,8 @@ export const memoryApi = {
 };
 
 export interface CorpusListResponse {
-  files: CorpusFile[];
+  files?: CorpusFile[];
+  items?: CorpusFile[];
   pagination: {
     page: number;
     limit: number;
