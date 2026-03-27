@@ -182,7 +182,7 @@ export interface CorpusListResponse {
 export const corpusManageApi = {
   // 获取语料库目录结构
   getCorpusFiles: () =>
-    api.get<{ success: boolean; data: CorpusListResponse; error?: string }>('/corpus/files'),
+    api.get<{ success: boolean; data: CorpusListResponse; error?: string }>('/corpus'),
 
   // 上传文档
   uploadDocument: (file: File, category?: string) => {
@@ -200,7 +200,7 @@ export const corpusManageApi = {
 
   // 删除文档
   deleteDocument: (id: string) =>
-    api.delete(`/corpus/files/${id}`),
+    api.delete(`/corpus/${id}`),
 
   // 触发索引
   triggerIndex: () =>
