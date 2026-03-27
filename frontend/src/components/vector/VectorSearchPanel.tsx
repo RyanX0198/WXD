@@ -69,6 +69,7 @@ export const VectorSearchPanel: React.FC<VectorSearchPanelProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
+            autoComplete="off"
             className="w-full bg-[#111] border border-[#333] rounded-xl pl-12 pr-24 py-3 text-white placeholder-gray-500 outline-none focus:border-[#5765c7] transition-colors"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

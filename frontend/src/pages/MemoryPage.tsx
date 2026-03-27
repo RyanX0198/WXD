@@ -52,6 +52,9 @@ export function MemoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'wxd'>('overview');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadMemory();
@@ -76,9 +79,32 @@ export function MemoryPage() {
   };
 
   const handleEditWXD = () => {
-    // 打开系统编辑器编辑 WXD.md
-    // 在实际实现中，这里可以调用 electron.shell.openPath 或类似API
-    alert('正在打开系统编辑器...\n文件位置: ~/.openclaw/workspace/WXD.md');
+    if (memory) {
+      setEditContent(memory.wxdContent);
+      setIsEditing(true);
+    }
+  };
+
+  const handleSaveWXD = async () => {
+    if (!memory) return;
+    setSaving(true);
+    try {
+      // TODO: 后端API完成后切换为真实调用
+      // await memoryApi.updateWXD(editContent);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setMemory({ ...memory, wxdContent: editContent, lastUpdated: new Date().toISOString() });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('保存失败:', err);
+      alert('保存失败，请重试');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditContent('');
   };
 
   const formatDate = (dateStr: string) => {
@@ -256,21 +282,63 @@ export function MemoryPage() {
               <p className="text-sm text-gray-500">
                 此文件包含系统的核心记忆配置
               </p>
-              <button
-                onClick={handleEditWXD}
-                className="flex items-center gap-2 px-4 py-2 bg-[#5765c7] hover:bg-[#4654b6] rounded-lg text-white transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                编辑 WXD.md
-              </button>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                    className="px-4 py-2 bg-[#222] hover:bg-[#333] rounded-lg text-gray-300 transition-colors disabled:opacity-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleSaveWXD}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#22c55e] hover:bg-[#16a34a] rounded-lg text-white transition-colors disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <LoadingSpinner size="sm" />
+                        保存中...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        保存
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleEditWXD}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#5765c7] hover:bg-[#4654b6] rounded-lg text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  编辑 WXD.md
+                </button>
+              )}
             </div>
-            <div className="bg-[#111] border border-[#333] rounded-xl p-6">
-              <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
-                {memory.wxdContent}
-              </pre>
-            </div>
+            {isEditing ? (
+              <div className="bg-[#111] border border-[#5765c7] rounded-xl p-4">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full h-[60vh] bg-[#0a0a0a] border border-[#333] rounded-lg p-4 text-sm text-gray-300 font-mono leading-relaxed outline-none focus:border-[#5765c7] resize-none"
+                  placeholder="在此编辑 WXD.md 内容..."
+                />
+              </div>
+            ) : (
+              <div className="bg-[#111] border border-[#333] rounded-xl p-6">
+                <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
+                  {memory.wxdContent}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </main>

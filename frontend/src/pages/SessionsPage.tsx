@@ -61,6 +61,7 @@ export function SessionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'speech' | 'general'>('all');
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     loadSessions();
@@ -144,6 +145,75 @@ export function SessionsPage() {
       case 'general': return 'bg-[#6b7280]';
       default: return 'bg-[#6b7280]';
     }
+  };
+
+  // 导出为纯文本 TXT
+  const exportAsTxt = (session: Session) => {
+    const lines: string[] = [];
+    lines.push(`标题: ${session.title}`);
+    lines.push(`类型: ${getTypeLabel(session.type)}`);
+    lines.push(`创建时间: ${new Date(session.createdAt).toLocaleString('zh-CN')}`);
+    lines.push(`更新时间: ${new Date(session.updatedAt).toLocaleString('zh-CN')}`);
+    lines.push(`消息数: ${session.messageCount}`);
+    lines.push('');
+    lines.push('='.repeat(40));
+    lines.push('');
+    lines.push(session.preview);
+    lines.push('');
+    lines.push('='.repeat(40));
+    lines.push('（完整对话内容需从服务端加载）');
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${session.title}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
+  };
+
+  // 导出为 DOCX (HTML → Blob)
+  const exportAsDocx = (session: Session) => {
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:w="urn:schemas-microsoft-com:office:word"
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="utf-8"><title>${session.title}</title>
+      <style>
+        body { font-family: 'Microsoft YaHei', sans-serif; padding: 40px; color: #222; }
+        h1 { font-size: 22px; border-bottom: 2px solid #5765c7; padding-bottom: 8px; }
+        .meta { color: #666; font-size: 13px; margin-bottom: 20px; }
+        .meta span { margin-right: 16px; }
+        .divider { border-top: 1px solid #ddd; margin: 16px 0; }
+        .content { font-size: 15px; line-height: 1.8; white-space: pre-wrap; }
+      </style></head>
+      <body>
+        <h1>${session.title}</h1>
+        <div class="meta">
+          <span>类型: ${getTypeLabel(session.type)}</span>
+          <span>创建: ${new Date(session.createdAt).toLocaleString('zh-CN')}</span>
+          <span>更新: ${new Date(session.updatedAt).toLocaleString('zh-CN')}</span>
+          <span>消息数: ${session.messageCount}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="content">${session.preview}</div>
+        <div class="divider"></div>
+        <p style="color:#999;font-size:12px;">（完整对话内容需从服务端加载）</p>
+      </body></html>`;
+
+    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${session.title}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
   };
 
   if (loading) {
@@ -346,15 +416,30 @@ export function SessionsPage() {
                   >
                     继续对话
                   </button>
-                  <button
-                    onClick={() => {
-                      // TODO: 导出功能
-                      alert('导出功能开发中...');
-                    }}
-                    className="px-6 py-3 bg-[#222] hover:bg-[#333] rounded-lg text-gray-300 transition-colors"
-                  >
-                    导出
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      className="px-6 py-3 bg-[#222] hover:bg-[#333] rounded-lg text-gray-300 transition-colors"
+                    >
+                      导出 ▾
+                    </button>
+                    {showExportMenu && (
+                      <div className="absolute bottom-full right-0 mb-2 w-48 bg-[#222] border border-[#444] rounded-lg shadow-xl overflow-hidden z-10">
+                        <button
+                          onClick={() => exportAsTxt(selectedSession)}
+                          className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#333] hover:text-white transition-colors flex items-center gap-2"
+                        >
+                          📄 导出为 TXT
+                        </button>
+                        <button
+                          onClick={() => exportAsDocx(selectedSession)}
+                          className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#333] hover:text-white transition-colors flex items-center gap-2 border-t border-[#333]"
+                        >
+                          📝 导出为 Word (.doc)
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
