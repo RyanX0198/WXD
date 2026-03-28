@@ -183,7 +183,7 @@ export interface CorpusListResponse {
 export const corpusManageApi = {
   // 获取语料库目录结构
   getCorpusFiles: () =>
-    api.get<{ success: boolean; data: CorpusListResponse; error?: string }>('/corpus'),
+    api.get<{ success: boolean; data: CorpusListResponse; error?: string }>('/api/corpus/files'),
 
   // 上传文档
   uploadDocument: (file: File, category?: string) => {

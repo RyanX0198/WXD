@@ -85,7 +85,7 @@ export function CorpusManagePage() {
         const fileList = (Array.isArray(rawList) ? rawList : []).map((f: any) => ({
           ...f,
           id: f.id || f._id || String(Date.now() + Math.random()),
-          name: f.name || f.filename || f.originalName || f.original_name || '未命名文件',
+          name: f.name || f.title || f.filename || f.originalName || f.original_name || '未命名文件',
           size: Number(f.size || f.fileSize || f.file_size) || 0,
           indexed: f.indexed ?? f.is_indexed ?? false,
           category: f.category || f.type || '',
