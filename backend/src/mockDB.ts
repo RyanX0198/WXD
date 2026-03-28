@@ -65,6 +65,17 @@ async function getDb() {
         createdAt TEXT
       )
     `);
+
+    // 自动seed默认用户（Render重启后SQLite数据丢失，自动恢复）
+    const defaultUser = await db.get('SELECT id FROM users WHERE email = ?', ['lr_wxd@163.com']);
+    if (!defaultUser) {
+      console.log('[DB] 检测到默认用户不存在，自动创建...');
+      await db.run(
+        'INSERT INTO users (id, email, password, name, createdAt) VALUES (?, ?, ?, ?, ?)',
+        ['user_default_001', 'lr_wxd@163.com', 'wxd123456', '文心达用户', new Date().toISOString()]
+      );
+      console.log('[DB] ✅ 默认用户已创建: lr_wxd@163.com');
+    }
   }
   return db;
 }
