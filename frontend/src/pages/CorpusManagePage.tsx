@@ -78,14 +78,28 @@ export function CorpusManagePage() {
     setError(null);
     try {
       const res = await corpusManageApi.getCorpusFiles();
+      console.log('[Corpus] API response:', res.data);
       if (res.data.success) {
-        setFiles(res.data.data.files || res.data.data.items || []);
+        // 防御性处理：兼容 files 和 items 两种格式，并规范化字段
+        const rawList = res.data.data?.files || res.data.data?.items || res.data.data || [];
+        const fileList = (Array.isArray(rawList) ? rawList : []).map((f: any) => ({
+          ...f,
+          id: f.id || f._id || String(Date.now() + Math.random()),
+          name: f.name || f.filename || f.originalName || f.original_name || '未命名文件',
+          size: Number(f.size || f.fileSize || f.file_size) || 0,
+          indexed: f.indexed ?? f.is_indexed ?? false,
+          category: f.category || f.type || '',
+          uploadedAt: f.uploadedAt || f.uploaded_at || f.createdAt || f.created_at || new Date().toISOString(),
+        }));
+        setFiles(fileList);
       } else {
         setError(res.data.error || '加载失败');
+        setFiles([]);
       }
     } catch (err: any) {
       console.error('加载文件失败:', err);
       setError(err.response?.data?.error || '加载文件失败，请检查网络连接');
+      setFiles([]);
     } finally {
       setLoading(false);
     }
@@ -120,8 +134,8 @@ export function CorpusManagePage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(f =>
-        f.name.toLowerCase().includes(query) ||
-        f.category?.toLowerCase().includes(query)
+        (f.name || '').toLowerCase().includes(query) ||
+        (f.category || '').toLowerCase().includes(query)
       );
     }
 
@@ -148,14 +162,16 @@ export function CorpusManagePage() {
     try {
       for (const file of Array.from(selectedFiles)) {
         console.log('上传文件:', file.name);
-        await corpusManageApi.uploadDocument(file);
+        const response = await corpusManageApi.uploadDocument(file);
+        console.log('[Upload] Response:', response.data);
       }
-      // 刷新文件列表
+      // 上传成功后延迟刷新，给后端处理时间
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await loadFiles();
       alert('文件上传成功！');
     } catch (err: any) {
       console.error('上传失败:', err);
-      setError(err.response?.data?.error || err.response?.data?.message || '上传文件失败，请重试');
+      setError(err.response?.data?.error || err.response?.data?.message || err.message || '上传文件失败，请重试');
     } finally {
       setUploading(false);
     }
@@ -254,6 +270,7 @@ export function CorpusManagePage() {
   };
 
   const getFileIcon = (filename: string) => {
+    if (!filename) return '📎';
     const ext = filename.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'pdf': return '📄';
@@ -269,7 +286,7 @@ export function CorpusManagePage() {
     total: files.length,
     indexed: files.filter(f => f.indexed).length,
     pending: files.filter(f => !f.indexed).length,
-    totalSize: files.reduce((acc, f) => acc + f.size, 0),
+    totalSize: files.reduce((acc, f) => acc + (Number(f.size) || 0), 0),
   };
 
   return (
