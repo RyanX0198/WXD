@@ -80,6 +80,7 @@ model Corpus {
   tags        String   @default("[]") // JSON字符串存储标签数组
   source      String?  // 来源
   isTemplate  Boolean  @default(false) // 是否为范文模板
+  indexed     Boolean  @default(false) // 文本是否已成功提取/索引
   
   // 统计字段
   viewCount   Int      @default(0)  // 浏览次数

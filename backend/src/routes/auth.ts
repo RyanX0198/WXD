@@ -77,6 +77,41 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/auth/reset-password (重置密码)
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: '邮箱和新密码必填' });
+    }
+    
+    const user = await mockDB.findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+    
+    await mockDB.updatePassword(email, newPassword);
+    
+    const token = jwt.sign({ userId: user.id, email: user.email });
+    
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          userId: user.id,
+          email: user.email,
+          name: user.name
+        }
+      }
+    });
+  } catch (error) {
+    console.error('重置密码错误:', error);
+    res.status(500).json({ error: '重置密码失败' });
+  }
+});
+
 // GET /api/auth/me (验证token)
 router.get('/me', (req, res) => {
   try {

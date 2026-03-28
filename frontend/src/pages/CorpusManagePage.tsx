@@ -79,7 +79,7 @@ export function CorpusManagePage() {
     try {
       const res = await corpusManageApi.getCorpusFiles();
       if (res.data.success) {
-        setFiles(res.data.data.files);
+        setFiles(res.data.data.files || res.data.data.items || []);
       } else {
         setError(res.data.error || '加载失败');
       }

@@ -91,6 +91,11 @@ export const mockDB = {
     return db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, password]);
   },
 
+  async updatePassword(email: string, newPassword: string) {
+    const db = await getDb();
+    await db.run('UPDATE users SET password = ? WHERE email = ?', [newPassword, email]);
+  },
+
   // ========== 文档相关 ==========
   async createDocument(title: string, content: string, userId: string) {
     const db = await getDb();
