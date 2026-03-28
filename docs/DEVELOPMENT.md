@@ -1,6 +1,6 @@
 # WXD 项目开发流程规范
 
-**文档版本**: v1.2  
+**文档版本**: v1.3  
 **生效日期**: 2026-03-28  
 **适用范围**: WXD 写作助手项目全体成员  
 **文档状态**: 强制执行  
@@ -182,17 +182,98 @@ hotfix/critical-auth-bypass     # 紧急
 - [ ] 无敏感信息硬编码（密钥、密码、Token）
 - [ ] 错误处理完善
 - [ ] 输入参数有校验
+- [ ] **防御性编程：所有API响应添加空值保护（2026-03-28教训）**
 
 *前端额外:*
 - [ ] TypeScript 类型完整
 - [ ] 响应式设计
+- [ ] **ErrorBoundary组件保护（2026-03-28教训）**
 
 *后端额外:*
 - [ ] API 符合 RESTful 规范
 - [ ] 数据库事务正确
 - [ ] 日志记录完善
+- [ ] **API变更已同步前端类型定义（2026-03-28教训）**
 
 **结论:** `LGTM`(合并) / `Request Changes`(修改) / `Comment`(仅评论)
+
+---
+
+### 4.4 防御性编程规范（强制执行）
+
+**[Core Insight]** 运行时数据 ≠ 编译时类型。后端可能返回null、undefined或格式漂移的数据。
+
+**前端必遵守:**
+
+| 场景 | 规范 | 示例 |
+|------|------|------|
+| API响应处理 | 所有字段视为optional | `const data = res.data?.data?.files ?? []` |
+| 数组渲染 | 永远提供fallback | `items?.map(...)` 或 `(items \|\| []).map(...)` |
+| 对象解构 | 提供默认值 | `const { name = '' } = user \|\| {}` |
+| 错误边界 | 关键页面必须有ErrorBoundary | 见下方组件要求 |
+
+**React ErrorBoundary组件模板:**
+```tsx
+// components/ErrorBoundary.tsx
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error('渲染错误:', error, info);
+    // 可接入Sentry上报
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div>页面加载失败，请刷新重试</div>;
+    }
+    return this.props.children;
+  }
+}
+```
+
+**引用场景:**
+```tsx
+<ErrorBoundary>
+  <CorpusManagePage />
+</ErrorBoundary>
+```
+
+---
+
+### 4.5 API契约管理（强制执行）
+
+**[Core Insight]** API契约漂移是白屏/崩溃的首要根因。
+
+**后端API变更流程:**
+```
+变更需求 → 更新Swagger文档 → 通知前端 → 联合评审 → 同步修改 → 联合测试 → 上线
+     │              │              │           │           │           │
+  识别影响      文档先行       飞书通知    @KP审批     类型同步    E2E验证    灰度发布
+```
+
+**禁止事项:**
+- ❌ 口头告知API变更
+- ❌ 直接改生产API返回格式
+- ❌ 删除/重命名字段不通知
+
+**必须事项:**
+- ✅ Swagger/OpenAPI文档实时更新
+- ✅ 字段增删必须有版本控制
+- ✅ 破坏性变更提前48小时通知
+- ✅ 新旧格式并行期≥7天
+
+**前端对接API时的义务:**
+1. 不信任后端返回格式，所有字段视为optional
+2. API响应必须使用类型守卫或schema验证
+3. 对接后48小时内补充E2E测试
 
 ---
 
@@ -216,6 +297,8 @@ hotfix/critical-auth-bypass     # 紧急
 
 **发布前必须:**
 - [ ] E2E 主流程通过
+- [ ] **关键业务流程E2E覆盖（上传→刷新→显示完整链路）（2026-03-28教训）**
+- [ ] **API契约变更后的回归测试（2026-03-28教训）**
 - [ ] 无已知 P0/P1 缺陷
 
 ---
@@ -415,6 +498,7 @@ docs/
 | v1.0 | 2026-03-28 | KAVIS | 初始版本 |
 | v1.1 | 2026-03-28 | KAVIS + KP | 按KP建议精简：Trunk-Based分支、分级评审、分层测试、砍Staging、周会替代日会 |
 | v1.2 | 2026-03-28 | KAVIS + 老板 | 新增文档维护铁律：专人负责制（KP负责技术文档）、文档不更新=未完成开发 |
+| **v1.3** | **2026-03-28** | **Soul MD** | **白屏事件教训固化：防御性编程规范、API契约管理、ErrorBoundary要求、关键流程E2E测试** |
 
 ---
 
